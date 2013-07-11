@@ -116,3 +116,70 @@ public class LinkEnsemble extends Ensemble {
 							"   ScpComponents=" +scpComponentIds);
 	}
 }
+
+////////AppComponent/////////
+public class AppComponent extends Component {
+	
+	public final static long serialVersionUID = 1L;
+
+	/**
+	* which application the app component is running on (the "ownerId", or vendorId)
+	*/
+	public String runningOn;
+	/**
+	 * id of the SCP instance which the application component is processed by
+	 */
+	public String scpId;
+	
+	/**
+	 * flag for deployment
+	 */
+	public Boolean isDeployed;
+	
+	//...
+}
+	
+////////ScpComponent/////////
+public class ScpComponent extends NetworkComponent {
+	
+	public final static long serialVersionUID = 1L;
+	
+	/**
+	 * id of the application nodes which are linked to the scp
+	 */
+	public List<String> appIds;
+	/** latency with different mapped parameters
+	 */
+	Map<String, Object>> latency;
+	
+	//...
+}
+
+////////NetworkComponent/////////
+public class NetworkComponent extends Component {
+
+	private static final long serialVersionUID = 1L;
+	
+	public ENetworkId networkId; // = which network does the component belong to
+}
+
+////////ENetworkId/////////
+public enum ENetworkId {
+	LMU_MUNICH,
+	IMT_LUCCA,
+	EN_GARDEN
+}
+
+////////IdListType/////////
+public class IdListType extends AbstractIdType {
+	public List<String> idList;
+
+	public IdListType(List<String> idList) {
+		this.idList = idList;
+	}
+}
+
+////////AbstractListType/////////
+public abstract class AbstractIdType {
+
+}
