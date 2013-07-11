@@ -74,3 +74,17 @@ public enum ENetworkId {
 	IMT_LUCCA,
 	EN_GARDEN
 }
+
+////////IdListType/////////
+public class IdListType extends AbstractIdType {
+	public List<String> idList;
+
+	public IdListType(List<String> idList) {
+		this.idList = idList;
+	}
+}
+
+////////AbstractListType/////////
+public abstract class AbstractIdType {
+
+}
