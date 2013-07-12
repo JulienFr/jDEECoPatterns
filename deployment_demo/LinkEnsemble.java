@@ -27,28 +27,22 @@ public class LinkEnsemble extends Ensemble {
 	
 	private static final long serialVersionUID = 1L;
 
-	// filter on the application components : analog to a pre-processed membership
-	// no need of selection for them as we do not have any relation between AppComponents subsets
-	@Filter
-	public static boolean appFilter(
-			@In("coord.id") String cId,
-			@In("coord.runningOn") String cRunningOn,
-			@In("member.id") String mId,
-			@In("member.runningOn") String mRunningOn){
+	// can be hidden from the framework and safe as being private
+	private Boolean appSelector(String cId, String cRunningOn, String mId, String mRunningOn){
 		return (!mId.equals(cId) && cRunningOn.equals(mRunningOn));
 	}
 	
-	// selection for the scp component
-	@Selection
-	public static List<String> scpSelection(
-			@In("members.id") List<String> scpIds,
-			@In("members.sla.maxLinkLatency") List<Long> scpMaxLatencies,
-			@In("members.latencies") List<Map<String, Long>> scpLatencies){
+	// can be hidden from the framework and safe as being private
+	private List<Boolean> scpSelector(List<String> scpIds, List<Map<String, Long>> scpLatencies){
 		List<String> mLinkedIds = new ArrayList<String> ();
+		List<Boolean> selectors = new List<Boolean> ();
 		int range = 4;
 		// transforming the List<Map> data structure into a List data structure
 		List<Link> mLinks = new ArrayList<Link> ();
 		for (int i = 0; i < scpLatencies.size(); i++){
+			// set all selectors to false
+			selectors.add(false);
+			
 			Map<String,Long> map = scpLatencies.get(i);
 			Object[] toIdSet = scpLatencies.get(i).keySet().toArray();
 			// iterate over all the link destinations
@@ -103,36 +97,43 @@ public class LinkEnsemble extends Ensemble {
 			if (mLinkedIds.size() < range)
 				indexer = firstAddIndex;
 		}
-		return mLinkedIds;
+		// setting up the list of booleans
+		for (int i = 0; i < mLinkedIds.size(); i++){
+			int index = scpIds.indexOf(mLinkedIds.get(i));
+			selectors.set(index, true);
+		}
+		return selectors;
 	}
 	
 	@Membership
-	@Members({
-		// we state which filters are to be considered
-		// this way, we can have the possibility to use the same filter for different member groups
-		@MemberGroup(identifier="App", filter="appFilter"),
-		@MemberGroup(identifier="Scp", selection="scpSelection")
-	})
 	public static Boolean membership(
 			// AppComponent coordinator
 			@In("coord.id") String cAppId,
 			@In("coord.scpId") String cAppScpId,
 			@In("coord.isDeployed") Boolean cAppIsDeployed,
 			// AppComponent members
+			@Selector("App") List<Boolean> msAppSelectors, // huge freedom on the size as only booleans rule it
 			@In("members.App.id") List<String> msAppIds,
 			@In("members.App.scpId") List<String> msAppScpIds,
 			@In("members.App.isDeployed") List<Boolean> msAppIsDeployed,
 			// ScpComponent members
+			@Selector("Scp") List<Boolean> msScpSelectors,
 			@In("members.Scp.id") List<String> msScpIds,
-			@In("members.Scp.appIds") List<List<String>> msScpAppIds
+			@In("members.Scp.appIds") List<List<String>> msScpAppIds,
+			@In("members.Scp.latencies") List<Map<String, Long>> scpLatencies
 			) {
-		// if all AppComponents have not been deployed yet
-		// we suppose the input members arrays are not empty as being injected before the call
-		if (!cAppIsDeployed &&
-			!msAppIsDeployed.contains(false)){
+		if (!cAppIsDeployed && !msAppIsDeployed.contains(false)){
+			// only after some preconditions, we can come to the selector computations
+			// scp selection
+			msScpSelectors = scpSelector(msScpIds,  scpLatencies);
+			// app selection
+			for (int i = 0; i < msAppIds.size(); i++){
+				msAppSelectors.set(i, appSelector(cAppId, cAppIsDeployed, msAppIds.get(i), msAppIsDeployed.get(i))); 
+			}
+			// here we go
 			return true;
 		}
-		return null;
+		return false;
 	}
 
 	// to expand to different cdScpInstanceIds in case of high candidate range
