@@ -1,3 +1,28 @@
+package cz.cuni.mff.d3s.deeco.demo.cloud.scenarios.deployment3;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import cz.cuni.mff.d3s.deeco.annotations.In;
+import cz.cuni.mff.d3s.deeco.annotations.InOut;
+import cz.cuni.mff.d3s.deeco.annotations.KnowledgeExchange;
+import cz.cuni.mff.d3s.deeco.annotations.MemberGroup;
+import cz.cuni.mff.d3s.deeco.annotations.Members;
+import cz.cuni.mff.d3s.deeco.annotations.Membership;
+import cz.cuni.mff.d3s.deeco.annotations.Out;
+import cz.cuni.mff.d3s.deeco.annotations.PeriodicScheduling;
+import cz.cuni.mff.d3s.deeco.ensemble.Ensemble;
+import cz.cuni.mff.d3s.deeco.invokable.types.IdentifiedIdListType;
+import cz.cuni.mff.d3s.deeco.knowledge.OutWrapper;
+
+/**
+ * 
+ * @author Julien Malvot
+ *
+ */
 public class LinkEnsemble extends Ensemble {
 	
 	private static final long serialVersionUID = 1L;
@@ -10,7 +35,7 @@ public class LinkEnsemble extends Ensemble {
 			@In("coord.runningOn") String cRunningOn,
 			@In("member.id") String mId,
 			@In("member.runningOn") String mRunningOn){
-		return (!mIds.equals(cId) && cRunningOn.equals(mRunningOn));
+		return (!mId.equals(cId) && cRunningOn.equals(mRunningOn));
 	}
 	
 	// selection for the scp component
@@ -80,9 +105,7 @@ public class LinkEnsemble extends Ensemble {
 		}
 		return mLinkedIds;
 	}
-	/**
-	 * Membership function
-	 */
+	
 	@Membership
 	@Members({
 		// we state which filters are to be considered
@@ -103,15 +126,16 @@ public class LinkEnsemble extends Ensemble {
 			@In("members.Scp.id") List<String> msScpIds,
 			@In("members.Scp.appIds") List<List<String>> msScpAppIds
 			) {
-		// the condition would be here only about the coordinator, as it is the only triggerer here
-		// and all the other members are filtered, if the filters fail, the membership is not called, and
-		// another case can be estimated
-		if (!cAppIsDeployed){
+		// if all AppComponents have not been deployed yet
+		// we suppose the input members arrays are not empty as being injected before the call
+		if (!cAppIsDeployed &&
+			!msAppIsDeployed.contains(false)){
 			return true;
 		}
-		return false;
+		return null;
 	}
 
+	// to expand to different cdScpInstanceIds in case of high candidate range
 	@KnowledgeExchange
 	@PeriodicScheduling(3000)
 	public static void map(
@@ -147,90 +171,4 @@ public class LinkEnsemble extends Ensemble {
 							"   AppComponents=" + appComponentIds + 
 							"   ScpComponents=" +scpComponentIds);
 	}
-}
-
-////////AppComponent/////////
-public class AppComponent extends Component {
-	
-	public final static long serialVersionUID = 1L;
-
-	/**
-	* which application the app component is running on (the "ownerId", or vendorId)
-	*/
-	public String runningOn;
-	/**
-	 * id of the SCP instance which the application component is processed by
-	 */
-	public String scpId;
-	
-	/**
-	 * flag for deployment
-	 */
-	public Boolean isDeployed;
-	
-	//...
-}
-	
-////////ScpComponent/////////
-public class ScpComponent extends NetworkComponent {
-	
-	public final static long serialVersionUID = 1L;
-	
-	/**
-	 * id of the application nodes which are linked to the scp
-	 */
-	public List<String> appIds;
-	/** latency with different mapped parameters
-	 */
-	Map<String, Object>> latencies;
-	
-	//...
-}
-
-////////ScpServiceLevelAgreement/////////
-public class ScpServiceLevelAgreement extends Knowledge {
-	
-	/**
-	 * first scenario
-	 */
-	public Long maxLinkLatency;
-	
-	/**
-	 * third scenario
-	 */
-	public Integer minCpuCores;
-	public Long minCpuFrequency;
-	
-	public ScpServiceLevelAgreement() {
-		maxLinkLatency = Long.MAX_VALUE;
-	}
-}
-
-////////NetworkComponent/////////
-public class NetworkComponent extends Component {
-
-	private static final long serialVersionUID = 1L;
-	
-	public ENetworkId networkId; // = which network does the component belong to
-}
-
-////////ENetworkId/////////
-public enum ENetworkId {
-	LMU_MUNICH,
-	IMT_LUCCA,
-	EN_GARDEN
-}
-
-////////IdListType/////////
-public class IdListType extends AbstractIdType {
-	public List<String> idList;
-
-	public IdListType(List<String> idList) {
-		this.idList = idList;
-	}
-}
-
-////////AbstractListType/////////
-public abstract class AbstractIdType {
-
 }
