@@ -28,14 +28,14 @@ public class LinkEnsemble extends Ensemble {
 	private static final long serialVersionUID = 1L;
 
 	// can be hidden from the framework and safe as being private
-	private Boolean appSelector(String cId, String cRunningOn, String mId, String mRunningOn){
+	private static Boolean appSelector(String cId, String cRunningOn, String mId, String mRunningOn){
 		return (!mId.equals(cId) && cRunningOn.equals(mRunningOn));
 	}
 	
 	// can be hidden from the framework and safe as being private
-	private List<Boolean> scpSelector(List<String> scpIds, List<Map<String, Long>> scpLatencies){
+	private static List<Boolean> scpSelector(List<String> scpIds, List<Map<String, Long>> scpLatencies){
 		List<String> mLinkedIds = new ArrayList<String> ();
-		List<Boolean> selectors = new List<Boolean> ();
+		List<Boolean> selectors = new ArrayList<Boolean> ();
 		int range = 4;
 		// transforming the List<Map> data structure into a List data structure
 		List<Link> mLinks = new ArrayList<Link> ();
@@ -49,7 +49,7 @@ public class LinkEnsemble extends Ensemble {
 			for (int j = 0; j < toIdSet.length; j++){
 				Long latency = map.get((Object)scpIds.get(i));
 				// if the latency respects the Service Level Agreement max latency of the source
-				if (latency <= scpMaxLatencies.get(i)){
+				if (latency <= 50){
 					// add the link to the data structure
 					Link link = new Link(scpIds.get(i), (String)toIdSet[j], latency);
 					mLinks.add(link);
@@ -110,11 +110,13 @@ public class LinkEnsemble extends Ensemble {
 			// AppComponent coordinator
 			@In("coord.id") String cAppId,
 			@In("coord.scpId") String cAppScpId,
+			@In("coord.runningOn") String cAppRunningOn,
 			@In("coord.isDeployed") Boolean cAppIsDeployed,
 			// AppComponent members
 			@Selector("App") List<Boolean> msAppSelectors, // huge freedom on the size as only booleans rule it
 			@In("members.App.id") List<String> msAppIds,
 			@In("members.App.scpId") List<String> msAppScpIds,
+			@In("members.App.runningOn") List<String> msAppRunningOn,
 			@In("members.App.isDeployed") List<Boolean> msAppIsDeployed,
 			// ScpComponent members
 			@Selector("Scp") List<Boolean> msScpSelectors,
@@ -128,7 +130,7 @@ public class LinkEnsemble extends Ensemble {
 			msScpSelectors = scpSelector(msScpIds,  scpLatencies);
 			// app selection
 			for (int i = 0; i < msAppIds.size(); i++){
-				msAppSelectors.set(i, appSelector(cAppId, cAppIsDeployed, msAppIds.get(i), msAppIsDeployed.get(i))); 
+				msAppSelectors.set(i, appSelector(cAppId, cAppRunningOn, msAppIds.get(i), msAppRunningOn.get(i))); 
 			}
 			// here we go
 			return true;
