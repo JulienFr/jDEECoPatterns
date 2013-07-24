@@ -30,7 +30,7 @@ public class BalanceHSEnsemble extends Ensemble {
 	
 	@PerformanceRequirement
 	public static Boolean loads(@In("coord.id") String cId, @In("member.id") String mId){
-		// retrieve the component from the id, the user could in anyway modify the data as
+		// retrieve the component from the id, the user can not modify the data as
 		// we would not allow any inout or out parameters here
 		Component c = getComponentFromId(cId);
 		Component m = getComponentFromId(mId);
@@ -51,6 +51,12 @@ public class BalanceHSEnsemble extends Ensemble {
 		machineIdle.bind("load", cLoad);
 		Formula smallLoad = SimpleFormulas.createSmallerThanConst("load", 0.6);
 		smallLoad.bind("load", mLoad);
+		
+		// launch spl with the previous init
+		
+		// get results and see if it's satisfactory
+		
+		// return true if so
 	}
 	
 	
@@ -65,53 +71,19 @@ public class BalanceHSEnsemble extends Ensemble {
 			@In("member.load") Long mLoad
 			) { 
 		if (cIsDeployed && cScpId.equals(mId)){
-			// only after some preconditions, we can come to the selector computations
-			// scp selection
-			/*scpSelector(msScpSelectors.value, msScpIds,  scpLatencies);
-			// app selection
-			for (int i = 0; i < msAppIds.size(); i++){
-				msAppSelectors.value.set(i, appSelector(cAppId, cAppRunningOn, msAppIds.get(i), msAppRunningOn.get(i))); 
-			}*/
-			// here we go
+			// ...
 			return true;
 		}
 		return false;
 	}
-
-	// to expand to different cdScpInstanceIds in case of high candidate range
+	
 	@KnowledgeExchange
 	@PeriodicScheduling(3000)
 	public static void map(
-			// AppComponent coordinator (1)
-			@In("coord.id") String cAppId,
-			@InOut("coord.scpId") OutWrapper<String> cAppScpId,
-			@Out("coord.isDeployed") OutWrapper<Boolean> cAppIsDeployed,
-			// AppComponent members (n-1)
-			@In("members.App.id") List<String> msAppIds,
-			@InOut("members.App.scpId") OutWrapper<List<String>> msAppScpIds,
-			@InOut("members.App.isDeployed") OutWrapper<List<Boolean>> msAppIsDeployed,
-			// ScpComponent members (n)
-			@In("members.Scp.id") List<String> msScpIds,
-			@InOut("members.Scp.appIds") OutWrapper<List<List<String>>> msScpAppIds) {
-		String appComponentIds = cAppId;
-		String scpComponentIds = msScpIds.get(0);
-		// all AppComponents are now deployed by ScpComponents
-		cAppScpId.value = msScpIds.get(0);
-		cAppIsDeployed.value = Boolean.TRUE;
-		msScpAppIds.value.get(0).add(cAppId);
-		// linkage
-		for (int i = 0; i < msAppIsDeployed.value.size(); i++){
-			msAppIsDeployed.value.set(i,Boolean.TRUE);
-			msAppScpIds.value.set(i, msScpIds.get(i+1));
-			// app component id registration into the scp component
-			// regarding of the first assigned id for the coordinator
-			msScpAppIds.value.get(i+1).add(msAppIds.get(i));
-			
-			appComponentIds += " " + msAppIds.get(i);
-			scpComponentIds += " " + msScpIds.get(i+1);
-		}
-		System.out.println("coordinator="+cAppId+ 
-							"   AppComponents=" + appComponentIds + 
-							"   ScpComponents=" +scpComponentIds);
+			// AppComponent coordinator
+			@In("coord.id") String cId,
+			// AppComponent member
+			@In("member..id") String mId) {
+		// do something
 	}
 }
