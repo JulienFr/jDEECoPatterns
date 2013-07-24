@@ -15,6 +15,7 @@ import cz.cuni.mff.d3s.deeco.knowledge.Component;
 import cz.cuni.mff.d3s.deeco.knowledge.OutWrapper;
 import cz.cuni.mff.d3s.spl.core.Data;
 import cz.cuni.mff.d3s.spl.core.Formula;
+import cz.cuni.mff.d3s.spl.core.Result;
 import cz.cuni.mff.d3s.spl.core.impl.SimpleFormulas;
 import cz.cuni.mff.d3s.spl.sources.SystemLoad;
 import cz.cuni.mff.spl.SPL;
@@ -28,35 +29,21 @@ public class BalanceHSEnsemble extends Ensemble {
 	
 	private static final long serialVersionUID = 1L;
 	
-	@PerformanceRequirement
-	public static Boolean loads(@In("coord.id") String cId, @In("member.id") String mId){
-		// retrieve the component from the id, the user can not modify the data as
-		// we would not allow any inout or out parameters here
-		Component c = getComponentFromId(cId);
-		Component m = getComponentFromId(mId);
-		AppHSComponent ahc = null;
-		ScpHSComponent shc = null;
-		// get the application component
-		if (c.getClass().isAssignableFrom(AppHSComponent.class))
-			ahc = (AppHSComponent) c;
-		else return false;
-		// get the scp component
-		if (m.getClass().isAssignableFrom(ScpHSComponent.class))
-			shc = (ScpHSComponent) m;
-		else return false;
-		
-		Data cLoad = ...;
-		Data mLoad = ...;
-		Formula machineIdle = SimpleFormulas.createSmallerThanConst("load", 0.2);
-		machineIdle.bind("load", cLoad);
-		Formula smallLoad = SimpleFormulas.createSmallerThanConst("load", 0.6);
-		smallLoad.bind("load", mLoad);
-		
-		// launch spl with the previous init
-		
-		// get results and see if it's satisfactory
-		
-		// return true if so
+	@PerformanceEvaluation
+	public static Boolean migrateApp(){
+		// instantiate a scp component data source
+		Data scpLoad = ScpHSComponentData.INSTANCE;
+		// high load for 50%
+		Formula belowHighLoad = SimpleFormulas.createSmallerThanConst("load", 50);
+		// bind the scp data source with the load variable
+		belowHighLoad.bind("load", scpLoad);
+		// evaluate the formula
+		if (belowHighLoad.evaluate() == Result.TRUE){
+			// the load is ok, no need of anything
+			return false;
+		}
+		// the load is too high, need to ask the Zimory Platform to start a new VM with more power
+		return true;
 	}
 	
 	
