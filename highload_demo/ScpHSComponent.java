@@ -22,7 +22,7 @@ public class ScpHSComponent extends ScpDSComponent {
 	public String machineId;
 	/** load of the scp component provided by the underlying OS 
 	 * and based on the number of ready threads at some period of time */
-	public Long load;
+	//public Long load;
 	/**
 	 * constructor with input network id parameter
 	 * 
@@ -34,8 +34,9 @@ public class ScpHSComponent extends ScpDSComponent {
 	public ScpHSComponent(String id, ENetworkId networkId) {
 		super(id, networkId);
 		this.machineId = null;
-		this.load = 0L;
+		//this.load = 0L;
 	}
+	
 
 	/*
 	 * @Process

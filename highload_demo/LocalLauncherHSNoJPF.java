@@ -13,18 +13,21 @@ import cz.cuni.mff.d3s.deeco.knowledge.local.LocalKnowledgeRepository;
 import cz.cuni.mff.d3s.deeco.provider.AbstractDEECoObjectProvider;
 import cz.cuni.mff.d3s.deeco.provider.ClassDEECoObjectProvider;
 import cz.cuni.mff.d3s.deeco.provider.InitializedDEECoObjectProvider;
+import cz.cuni.mff.d3s.deeco.runtime.DynamicRuntime;
 import cz.cuni.mff.d3s.deeco.runtime.Runtime;
 import cz.cuni.mff.d3s.deeco.scheduling.MultithreadedScheduler;
 import cz.cuni.mff.d3s.deeco.scheduling.Scheduler;
 
 /**
- * The scenario Science Cloud Platform Instances SCPis
+ * The Highload Scenario for Science Cloud Platform
  * 
  * @author Julien Malvot
  * 
  */
 public class LocalLauncherHSNoJPF {
 
+	public static DynamicRuntime dr = null;
+	public static List<ScpHSComponent> scpComponents = null;
 	/**
 	 * 
 	 * @param args
@@ -39,10 +42,11 @@ public class LocalLauncherHSNoJPF {
 		Scheduler scheduler = new MultithreadedScheduler();
 		AbstractDEECoObjectProvider dop = new ClassDEECoObjectProvider(
 				components, ensembles);
-		Runtime rt = new Runtime(km, scheduler);
-		rt.registerComponentsAndEnsembles(dop);
+		// the dynamic runtime enables the developper to register/unregister components at runtime
+		DynamicRuntime drt = new DynamicRuntime(km, scheduler);
+		drt.registerComponentsAndEnsembles(dop);
 
-		List<Component> scpComponents = new ArrayList<Component>(Arrays.asList(
+		scpComponents = new ArrayList<ScpHSComponent>(Arrays.asList(
 				// 3 SCPis at the LMU Munich
 				new ScpHSComponent("LMU1", ENetworkId.LMU_MUNICH),
 				new ScpHSComponent("LMU2", ENetworkId.LMU_MUNICH),
@@ -61,8 +65,8 @@ public class LocalLauncherHSNoJPF {
 
 		// initialize the DEECo with input initialized components
 		dop = new InitializedDEECoObjectProvider(cloudComponents, null);
-		rt.registerComponentsAndEnsembles(dop);
+		drt.registerComponentsAndEnsembles(dop);
 
-		rt.startRuntime();
+		drt.startRuntime();
 	}
 }
